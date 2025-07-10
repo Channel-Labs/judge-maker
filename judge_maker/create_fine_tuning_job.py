@@ -2,6 +2,7 @@ import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 import json
+import io
 import os
 import random
 import yaml
@@ -278,8 +279,6 @@ if __name__ == '__main__':
     print(f"Dataset split: {len(training_dataset)} training samples, {len(validation_dataset)} validation samples")
     
     # Helper function to upload a JSONL dataset to OpenAI without writing to disk
-    import io
-
     def upload_dataset_to_openai(dataset, filename):
         """Uploads the given dataset (list of dicts) to OpenAI as a JSONL file."""
         # Convert dataset to newline-delimited JSON string
