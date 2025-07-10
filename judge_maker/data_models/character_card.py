@@ -1,4 +1,5 @@
-from typing import Dict
+from typing import Dict, List
+import yaml
 
 from dataclasses import dataclass
 
@@ -29,5 +30,19 @@ class CharacterCard:
             scenario=data['scenario'],
             summary=data['summary']
         )
+
+
+def load_user_personas(yaml_file_path) -> List[CharacterCard]:
+    """Load user personas from YAML file and return list of CharacterCard objects."""
+    with open(yaml_file_path, 'r', encoding='utf-8') as file:
+        data = yaml.safe_load(file)
+    
+    # Create CharacterCard objects for each user persona
+    user_personas = []
+    for user_data in data['users']:
+        user_persona = CharacterCard.from_dict(user_data)
+        user_personas.append(user_persona)
+    
+    return user_personas
 
 

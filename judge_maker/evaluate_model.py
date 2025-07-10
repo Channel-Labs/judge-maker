@@ -1,6 +1,5 @@
 import argparse
 import json
-import os 
 import pandas as pd
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -8,7 +7,7 @@ import tqdm
 
 from openai import OpenAI
 
-from data_models.assistant import Assistant
+from data_models.assistant import Assistant, load_assistant
 from data_models.conversation import Conversation, Message, ROLE
 from llm_queries.create_grading_rubric_query import CreateGradingRubricQuery
 from llm_queries.judge_conversation_query import JudgeConversationQuery
@@ -18,10 +17,10 @@ openai_model_provider = OpenAIModelProvider(OpenAI())
 
 
 class ChatbotArenaWinnerPredictor:
-  def __init__(self, assistant: Assistant, model_id: str, rubric_generator_model_id: str):
+  def __init__(self, assistant: Assistant, judge_model_id: str, judge_prompt_generator_model_id: str):
     self.assistant = assistant
-    self.model_id = model_id
-    self.rubric_generator_model_id = rubric_generator_model_id
+    self.judge_model_id = judge_model_id
+    self.judge_prompt_generator_model_id = judge_prompt_generator_model_id
 
   @staticmethod
   def _format_conversation(prompt_messages, response_messages) -> Conversation:    
@@ -39,7 +38,7 @@ class ChatbotArenaWinnerPredictor:
 
     return JudgeConversationQuery(
       model_provider=openai_model_provider,
-      model_id=self.model_id,
+      model_id=self.judge_model_id,
       grading_rubric=grading_rubric,
       assistant=self.assistant,
       conversation=conversation
@@ -48,7 +47,7 @@ class ChatbotArenaWinnerPredictor:
   def determine_winner(self, prompt_messages, response_a_messages, response_b_messages):
     grading_rubric = CreateGradingRubricQuery(
       model_provider=openai_model_provider,
-      model_id=self.rubric_generator_model_id,
+      model_id=self.judge_prompt_generator_model_id,
       assistant=self.assistant
     ).query()
 
@@ -71,19 +70,18 @@ def process_row(row, predictor: ChatbotArenaWinnerPredictor):
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
-  parser.add_argument("--assistant-name", type=str, required=True)
-  parser.add_argument("--assistant-description", type=str, required=True)
-  parser.add_argument("--chatbot-arena-conversations-file", type=str, default="data/evaluation/chatbot_arena_multi_turn_conversations.csv")
+  parser.add_argument("--assistant-definition-file", type=str, required=True)
+  parser.add_argument("--evaluation-conversations-file", type=str, default="data/evaluation/chatbot_arena_multi_turn_conversations.csv")
   parser.add_argument("--output-file", type=str, default="predicted_chatbot_arena_winners.csv")
   parser.add_argument("--num-conversations", type=int, default=200)
-  parser.add_argument("--rubric-generator-model-id", type=str, required=True)
-  parser.add_argument("--model-id", type=str, default="o3")
+  parser.add_argument("--judge-prompt-generator-model-id", type=str, required=True)
+  parser.add_argument("--judge-model-id", type=str, default="o3")
   args = parser.parse_args()
 
-  assistant = Assistant(name=args.assistant_name, description=args.assistant_description)
-  df = pd.read_csv(args.chatbot_arena_conversations_file)[:args.num_conversations]
+  assistant = load_assistant(args.assistant_definition_file)
+  df = pd.read_csv(args.evaluation_conversations_file)[:args.num_conversations]
 
-  predictor = ChatbotArenaWinnerPredictor(assistant, args.model_id, args.rubric_generator_model_id)
+  predictor = ChatbotArenaWinnerPredictor(assistant, args.judge_model_id, args.judge_prompt_generator_model_id)
 
   predicted_winners = list()
   # Use ThreadPoolExecutor with pool size of 4

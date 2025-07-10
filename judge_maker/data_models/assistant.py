@@ -1,4 +1,5 @@
 import json
+import yaml
 from dataclasses import dataclass
 from typing import Dict
 
@@ -31,3 +32,14 @@ class Assistant:
     @property
     def prompt_format(self) -> str:
         return json.dumps(self.prompt_object, indent=4)
+
+
+def load_assistant(yaml_file_path) -> Assistant:
+    """Load assistant definition from YAML file and return Assistant object."""
+    with open(yaml_file_path, 'r', encoding='utf-8') as file:
+        data = yaml.safe_load(file)
+    
+    return Assistant(
+        name=data['name'],
+        description=data['description']
+    )

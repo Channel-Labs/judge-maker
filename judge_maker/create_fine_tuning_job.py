@@ -1,83 +1,23 @@
 import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime
 import json
 import io
 import os
 import random
-import yaml
-from uuid import uuid4
 from tqdm import tqdm
 import requests
 
 from openai import OpenAI
 
-from data_models.assistant import Assistant
-from data_models.character_card import CharacterCard
-from data_models.conversation import Conversation, Message, ROLE
+from data_models.assistant import load_assistant
+from data_models.character_card import load_user_personas
+from data_models.conversation import load_conversations
 from llm_queries.llm_query import OpenAIModelProvider
 from llm_queries.ground_truth_judge_query import GroundTruthJudgeQuery
 from llm_queries.create_grading_rubric_query import CreateGradingRubricQuery
 
 openai_client = OpenAI()
 openai_model_provider = OpenAIModelProvider(OpenAI())
-
-
-def load_assistant_personas(yaml_file_path):
-    """Load assistant personas from YAML file and return assistant and user personas."""
-    with open(yaml_file_path, 'r', encoding='utf-8') as file:
-        data = yaml.safe_load(file)
-    
-    # Create Assistant object
-    assistant_data = data['assistant']
-    assistant = Assistant(
-        name=assistant_data['name'],
-        description=assistant_data['description']
-    )
-    
-    # Create CharacterCard objects for each user persona
-    user_personas = []
-    for user_data in data['users']:
-        user_persona = CharacterCard.from_dict(user_data)
-        user_personas.append(user_persona)
-    
-    return assistant, user_personas
-
-
-def load_conversations(jsonl_file_path):
-    """Load conversations from JSONL file and return Conversation objects."""
-    conversations = []
-    
-    with open(jsonl_file_path, 'r', encoding='utf-8') as file:
-        for line_num, line in enumerate(file, 1):
-            try:
-                data = json.loads(line.strip())
-                
-                # Create Message objects
-                messages = []
-                for i, msg_data in enumerate(data['messages']):
-                    role = ROLE.user if msg_data['role'] == 'user' else ROLE.assistant
-                    message = Message(
-                        role=role,
-                        content=msg_data['content'],
-                        timestamp=datetime.now(),
-                        message_id=int(i)
-                    )
-                    messages.append(message)
-                
-                # Create Conversation object
-                conversation = Conversation(
-                    id=str(uuid4()),
-                    user_id=f"user_{line_num}",
-                    messages=messages
-                )
-                conversations.append(conversation)
-                
-            except json.JSONDecodeError as e:
-                print(f"Error parsing line {line_num}: {e}")
-                continue
-    
-    return conversations
 
 
 def create_fine_tuning_job(training_file_id, validation_file_id):
@@ -200,16 +140,18 @@ def create_fine_tuning_job(training_file_id, validation_file_id):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--assistant-personas-file", type=str, required=True)
+    parser.add_argument("--assistant-definition-file", type=str, required=True)
+    parser.add_argument("--user-personas-file", type=str, required=True)
     parser.add_argument("--conversations-file", type=str, required=True)
     parser.add_argument("--num-attempts-per-conversation", type=int, default=5)
     parser.add_argument("--ground-truth-judge-model-id", type=str, default="o3")
-    parser.add_argument("--rubric-generator-model-id", type=str, default="o4-mini")
-    parser.add_argument("--validation_fraction", type=float, default=0.25)
+    parser.add_argument("--judge-prompt-generator-model-id", type=str, default="o4-mini")
+    parser.add_argument("--validation-fraction", type=float, default=0.25)
     args = parser.parse_args()
     
-    # Load assistant personas and conversations
-    assistant, user_personas = load_assistant_personas(args.assistant_personas_file)
+    # Load assistant definition, user personas, and conversations
+    assistant = load_assistant(args.assistant_definition_file)
+    user_personas = load_user_personas(args.user_personas_file)
     conversations = load_conversations(args.conversations_file)
 
     grading_rubric_template_prompt = CreateGradingRubricQuery(
@@ -230,7 +172,7 @@ if __name__ == '__main__':
             # Re-generating the grading rubric for each conversation to increase diversity of selected rubrics
             grading_rubric = CreateGradingRubricQuery(
                 model_provider=openai_model_provider,
-                model_id=args.rubric_generator_model_id,
+                model_id=args.judge_prompt_generator_model_id,
                 assistant=assistant
             ).query()
 
