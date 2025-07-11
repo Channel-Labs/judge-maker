@@ -1,12 +1,16 @@
 <!-- PROJECT LOGO -->
-<br />
 <div align="center">
 
-<h2 align="center">JudgeMaker</h3>
+  <a href="https://channellabs.ai/">
+    <picture><img alt="JudgeMaker logo" src="assets/logo.png" width="160px"></picture>
+  </a>
 
   <p align="center">
-Optimize your LLM-as-a-judge prompts through reinforcement learning on synthetic data
-    <br />
+    <h1>JudgeMaker</h1>
+  </p>
+
+  <p>
+Optimize LLM-as-a-judge prompts to align with human preferences via reinforcement learning on synthetic data
   </p>
 </div>
 
@@ -92,15 +96,15 @@ Follow these steps to set up JudgeMaker in your environment.
 ### Installation
 
 1. Clone the repository
-   ```sh
+   ```bash
    git clone git@github.com:Channel-Labs/JudgeMaker.git
    ```
 2. Install Python dependencies
-   ```sh
+   ```bash
    pip install -r requirements.txt
    ```
 3. Set up your environment variables
-   ```sh
+   ```bash
    export OPENAI_API_KEY='your_openai_api_key'
    ```
 
@@ -115,8 +119,8 @@ Create a fine-tuned model using reinforcement learning to generate optimized LLM
 
 **Usage:**
 
-```sh
-python src/judge_maker/create_fine_tuning_job.py \
+```bash
+python judge_maker/create_fine_tuning_job.py \
   --assistant-definition-file <ASSISTANT_DEFINITION_FILE> \
   --user-personas-file <USER_PERSONAS_FILE> \
   --conversations-file <CONVERSATIONS_FILE_NAME> \
@@ -138,9 +142,9 @@ python src/judge_maker/create_fine_tuning_job.py \
 
 **Example:**
 
-```sh
-python src/judge_maker/create_fine_tuning_job.py \
-  --assistant-definition-file "data/examples/assistant_defintion.yaml" \
+```bash
+python judge_maker/create_fine_tuning_job.py \
+  --assistant-definition-file "data/examples/assistant_definition.yaml" \
   --user-personas-file "data/examples/assistant_personas.yaml" \
   --conversations-file "data/examples/assistant_conversations.jsonl"
 ```
@@ -151,8 +155,8 @@ After execution, navigate to the [OpenAI fine-tuning dashboard](https://platform
 
 Measure how effectively your model generates judge prompts that enable LLMs to predict human preferences. This evaluation works with any preference dataset where humans choose between two AI responses. As a demonstration, we include the [Chatbot Arena dataset](https://www.kaggle.com/competitions/lmsys-chatbot-arena/data). Our fine-tuned model improved accuracy for predicting multi-turn conversations from 64% to 68%. You can substitute your own preference datasets for domain-specific evaluation.
 
-```sh
-python src/judge_maker/evaluate_model.py \
+```bash
+python judge_maker/evaluate_model.py \
   --assistant-definition-file <ASSISTANT_DEFINITION_FILE> \
   --evaluation-conversations-file <EVALUATION_CONVERSATIONS_FILE> \
   --output-file <OUTPUT_FILE> \
@@ -172,9 +176,9 @@ python src/judge_maker/evaluate_model.py \
 
 **Example:**
 
-```sh
-python src/judge_maker/evaluate_model.py \
-  --assistant-definition-file "data/examples/assistant_defintion.yaml" \
+```bash
+python judge_maker/evaluate_model.py \
+  --assistant-definition-file "data/examples/assistant_definition.yaml" \
   --evaluation-conversations-file "data/evaluation/chatbot_arena_multi_turn_conversations.csv" \
   --output-file "evaluation_results.csv" \
   --judge-prompt-generator-model-id "o4-mini" 
