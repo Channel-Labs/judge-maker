@@ -20,7 +20,7 @@ openai_client = OpenAI()
 openai_model_provider = OpenAIModelProvider(OpenAI())
 
 
-def create_fine_tuning_job(training_file_id, validation_file_id):
+def create_fine_tuning_job(base_model_id, training_file_id, validation_file_id):
     """
     Create a fine-tuning job using OpenAI's API.
     
@@ -96,7 +96,7 @@ def create_fine_tuning_job(training_file_id, validation_file_id):
     data = {
         "training_file": training_file_id,
         "validation_file": validation_file_id,
-        "model": "o4-mini-2025-04-16",
+        "model": base_model_id,
         "seed": 42,
         "method": {
             "type": "reinforcement",
@@ -114,7 +114,8 @@ def create_fine_tuning_job(training_file_id, validation_file_id):
                     "reasoning_effort": "medium",
                     "batch_size": 6,
                     "eval_interval": 4,
-                    "n_epochs": 2
+                    "n_epochs": 2,
+                    "learning_rate_multiplier": 2.0
                 }
             }
         }
@@ -140,13 +141,24 @@ def create_fine_tuning_job(training_file_id, validation_file_id):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--assistant-definition-file", type=str, required=True)
-    parser.add_argument("--user-personas-file", type=str, required=True)
-    parser.add_argument("--conversations-file", type=str, required=True)
-    parser.add_argument("--num-attempts-per-conversation", type=int, default=5)
-    parser.add_argument("--ground-truth-judge-model-id", type=str, default="o3")
-    parser.add_argument("--judge-prompt-generator-model-id", type=str, default="o4-mini")
-    parser.add_argument("--validation-fraction", type=float, default=0.25)
+    parser.add_argument("--assistant-definition-file", type=str, required=True,
+                        help="Path to the file containing your assistant definition (name and description)")
+    parser.add_argument("--user-personas-file", type=str, required=True,
+                        help="Path to the file containing your generated user personas")
+    parser.add_argument("--conversations-file", type=str, required=True,
+                        help="Path to the file containing conversations between the generated personas and your assistant")
+    parser.add_argument("--num-attempts-per-conversation", type=int, default=5,
+                        help="Number of ground truth scores to generate per conversation. Scores are averaged to calculate a single ground truth score per conversation (default: 5)")
+    parser.add_argument("--ground-truth-judge-model-id", type=str, default="o3",
+                        help="Model ID for executing the ground truth grader judge (default: o3)")
+    parser.add_argument("--judge-prompt-generator-model-id", type=str, default="o4-mini-2025-04-16",
+                        help="Model ID for generating candidate LLM-as-a-judge prompts during fine-tuning (default: o4-mini-2025-04-16)")
+    parser.add_argument("--validation-fraction", type=float, default=0.25,
+                        help="Fraction of the dataset to withhold for validation during training (default: 0.25)")
+    parser.add_argument("--validation-file-id", type=str, default=None,
+                        help="Optional: Use an existing OpenAI file ID for validation data instead of uploading new data")
+    parser.add_argument("--training-file-id", type=str, default=None,
+                        help="Optional: Use an existing OpenAI file ID for training data instead of uploading new data")
     args = parser.parse_args()
     
     # Load assistant definition, user personas, and conversations
@@ -214,7 +226,7 @@ if __name__ == '__main__':
     random.shuffle(shuffled_dataset)
     
     # Split dataset into training and validation
-    split_index = int(len(shuffled_dataset) * (1- args.validation_fraction))
+    split_index = int(round(len(shuffled_dataset) * (1 - args.validation_fraction)))
     training_dataset = shuffled_dataset[:split_index]
     validation_dataset = shuffled_dataset[split_index:]
     
@@ -242,13 +254,13 @@ if __name__ == '__main__':
         return response.id
 
     # Upload training and validation datasets
-    training_file_id = upload_dataset_to_openai(training_dataset, "training_dataset.jsonl")
-    validation_file_id = upload_dataset_to_openai(validation_dataset, "validation_dataset.jsonl")
+    training_file_id = args.training_file_id if args.training_file_id else upload_dataset_to_openai(training_dataset, "training_dataset.jsonl")
+    validation_file_id = args.validation_file_id if args.validation_file_id else upload_dataset_to_openai(validation_dataset, "validation_dataset.jsonl")
 
     print(f"Upload completed: Training file ID: {training_file_id}, Validation file ID: {validation_file_id}")
 
     try:
-        result = create_fine_tuning_job(training_file_id, validation_file_id)
+        result = create_fine_tuning_job(args.judge_prompt_generator_model_id, training_file_id, validation_file_id)
         print("Fine-tuning job created successfully!")
         print(json.dumps(result, indent=2))
     except Exception as e:

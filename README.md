@@ -59,7 +59,7 @@ LLM-as-a-judge has become the standard for evaluating language models at scale, 
 
 ### Our Solution
 
-JudgeMaker combines the advantages of both approaches. Instead of fine-tuning a model to judge responses directly, we fine-tune a model to generate judge prompts that align with human preferences. This maintains full transparency while achieving superior performance.
+JudgeMaker combines the advantages of both approaches. Instead of fine-tuning a model to judge responses directly, we fine-tune a model to generate judge prompts that align with human preferences. This maintains full transparency while achieving superior performance. In our experiments, human preference alignment increased from 64% with optimal prompt engineering to 68% with JudgeMaker.
 
 #### Key Innovations
 
@@ -79,7 +79,7 @@ Test models against preference datasets to measure how effectively generated pro
 
 ---
 
-*For detailed technical information about our approach, methodology, and experimental results, please refer to our [technical white paper](XXXXX).*
+*For detailed technical information about our approach, methodology, and experimental results, please refer to our technical white paper (COMING SOON!).*
 
 <!-- GETTING STARTED -->
 ## Getting Started

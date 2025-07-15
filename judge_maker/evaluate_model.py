@@ -70,22 +70,33 @@ def process_row(row, predictor: ChatbotArenaWinnerPredictor):
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
-  parser.add_argument("--assistant-definition-file", type=str, required=True)
-  parser.add_argument("--evaluation-conversations-file", type=str, default="data/evaluation/chatbot_arena_multi_turn_conversations.csv")
-  parser.add_argument("--output-file", type=str, default="predicted_chatbot_arena_winners.csv")
-  parser.add_argument("--num-conversations", type=int, default=200)
-  parser.add_argument("--judge-prompt-generator-model-id", type=str, required=True)
-  parser.add_argument("--judge-model-id", type=str, default="o3")
+  parser.add_argument("--assistant-definition-file", type=str, required=True, 
+                      help="Path to the file containing your assistant definition (name and description)")
+  parser.add_argument("--evaluation-conversations-file", type=str, default="data/evaluation/chatbot_arena_multi_turn_conversations.csv",
+                      help="Path to the file containing conversations to evaluate")
+  parser.add_argument("--output-file", type=str, default="predicted_chatbot_arena_winners.csv",
+                      help="Path where evaluation results will be saved")
+  parser.add_argument("--num-conversations", type=int, default=200,
+                      help="Number of conversations to judge (default: 200)")
+  parser.add_argument("--judge-prompt-generator-model-id", type=str, required=True,
+                      help="Model ID for generating judge prompts. Use your fine-tuned model ID to evaluate fine-tuning performance, or a base model ID to evaluate the baseline")
+  parser.add_argument("--judge-model-id", type=str, default="o3",
+                      help="Model ID for judging conversations in the evaluation file (default: o3)")
   args = parser.parse_args()
 
   assistant = load_assistant(args.assistant_definition_file)
   df = pd.read_csv(args.evaluation_conversations_file)[:args.num_conversations]
+  actual_winners = list()
+  for i, row in df.iterrows():
+    if row['winner_model_a'] == 1:
+      actual_winners.append("a")
+    else:
+      actual_winners.append("b")
 
   predictor = ChatbotArenaWinnerPredictor(assistant, args.judge_model_id, args.judge_prompt_generator_model_id)
 
   predicted_winners = list()
-  # Use ThreadPoolExecutor with pool size of 4
-  with ThreadPoolExecutor(max_workers=4) as executor:
+  with ThreadPoolExecutor(max_workers=6) as executor:
       # Submit all tasks
       future_to_index = {executor.submit(process_row, row, predictor): i for i, row in df.iterrows()}
       
@@ -104,13 +115,6 @@ if __name__ == "__main__":
       
       # Replace None results with "error" to maintain equal lengths of predicted and actual winners
       predicted_winners = [result if result is not None else "error" for result in results]
-
-  actual_winners = list()
-  for i, row in df.iterrows():
-    if row['winner_model_a'] == 1:
-      actual_winners.append("a")
-    else:
-      actual_winners.append("b")
 
   print(f"Predicted winners length: {len(predicted_winners)}, Actual winners length: {len(actual_winners)}")
   print("Num correct: ", sum([predicted_winners[i] == actual_winners[i] for i in range(len(predicted_winners))]))
