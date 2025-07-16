@@ -76,8 +76,6 @@ if __name__ == "__main__":
                       help="Path to the file containing conversations to evaluate")
   parser.add_argument("--output-file", type=str, default="predicted_chatbot_arena_winners.csv",
                       help="Path where evaluation results will be saved")
-  parser.add_argument("--num-conversations", type=int, default=200,
-                      help="Number of conversations to judge (default: 200)")
   parser.add_argument("--judge-prompt-generator-model-id", type=str, required=True,
                       help="Model ID for generating judge prompts. Use your fine-tuned model ID to evaluate fine-tuning performance, or a base model ID to evaluate the baseline")
   parser.add_argument("--judge-model-id", type=str, default="o3",
@@ -85,7 +83,7 @@ if __name__ == "__main__":
   args = parser.parse_args()
 
   assistant = load_assistant(args.assistant_definition_file)
-  df = pd.read_csv(args.evaluation_conversations_file)[:args.num_conversations]
+  df = pd.read_csv(args.evaluation_conversations_file)
   actual_winners = list()
   for i, row in df.iterrows():
     if row['winner_model_a'] == 1:

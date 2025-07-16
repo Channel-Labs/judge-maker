@@ -112,10 +112,12 @@ def create_fine_tuning_job(base_model_id, training_file_id, validation_file_id):
                 },
                 "hyperparameters": {
                     "reasoning_effort": "medium",
-                    "batch_size": 6,
+                    "batch_size": 4,
                     "eval_interval": 4,
-                    "n_epochs": 2,
-                    "learning_rate_multiplier": 2.0
+                    "eval_samples": 2,
+                    "n_epochs": 1,
+                    "learning_rate_multiplier": 1.0,
+                    "compute_multiplier": 1.0
                 }
             }
         }

@@ -160,7 +160,6 @@ python judge_maker/evaluate_model.py \
   --assistant-definition-file <ASSISTANT_DEFINITION_FILE> \
   --evaluation-conversations-file <EVALUATION_CONVERSATIONS_FILE> \
   --output-file <OUTPUT_FILE> \
-  --num-conversations <NUM_CONVERSATIONS> \
   --judge-prompt-generator-model-id <JPG_MODEL_ID> \
   --judge-model-id <JUDGE_MODEL_ID>
 ```
@@ -170,7 +169,6 @@ python judge_maker/evaluate_model.py \
 - `--assistant-definition-file`: Path to the file containing your assistant definition (name and description)
 - `--evaluation-conversations-file`: Path to the file containing conversations to evaluate
 - `--output-file`: Path where evaluation results will be saved
-- `--num-conversations`: Number of conversations to judge (default: 200)
 - `--judge-prompt-generator-model-id`: Model ID for generating judge prompts. Use your fine-tuned model ID to evaluate fine-tuning performance, or a base model ID to evaluate the baseline
 - `--judge-model-id`: Model ID for judging conversations in the evaluation file (default: `o3`)
 

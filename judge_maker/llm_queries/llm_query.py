@@ -79,8 +79,7 @@ class OpenAIModelProvider(ModelProvider):
             ],
             seed=42,
             response_format=self.response_format(response_schema),
-            timeout=timeout,
-            temperature=1.0
+            timeout=timeout
         ).choices[0].message.content
 
         return json.loads(response)
