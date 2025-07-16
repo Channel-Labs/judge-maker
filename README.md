@@ -59,7 +59,7 @@ LLM-as-a-judge has become the standard for evaluating language models at scale, 
 
 ### Our Solution
 
-JudgeMaker combines the advantages of both approaches. Instead of fine-tuning a model to judge responses directly, we fine-tune a model to generate judge prompts that align with human preferences. This maintains full transparency while achieving superior performance. In our experiments, human preference alignment increased from 64% with optimal prompt engineering to 68% with JudgeMaker.
+JudgeMaker combines the advantages of both approaches. Instead of fine-tuning a model to judge responses directly, we fine-tune a model to generate judge prompts that align with human preferences. This maintains full transparency while achieving superior performance. In our experiments, human preference alignment increased from 59.5% with optimal prompt engineering to 62.8% with JudgeMaker.
 
 #### Key Innovations
 
@@ -79,7 +79,7 @@ Test models against preference datasets to measure how effectively generated pro
 
 ---
 
-*For detailed technical information about our approach, methodology, and experimental results, please refer to our technical white paper (COMING SOON!).*
+*For detailed technical information about our approach, methodology, and experimental results, please refer to our [technical white paper](https://channellabs.ai/articles/judge-maker).*
 
 <!-- GETTING STARTED -->
 ## Getting Started
@@ -153,7 +153,7 @@ After execution, navigate to the [OpenAI fine-tuning dashboard](https://platform
 
 ### 2. Evaluate Your Model
 
-Measure how effectively your model generates judge prompts that enable LLMs to predict human preferences. This evaluation works with any preference dataset where humans choose between two AI responses. As a demonstration, we include the [Chatbot Arena dataset](https://www.kaggle.com/competitions/lmsys-chatbot-arena/data). Our fine-tuned model improved accuracy for predicting multi-turn conversations from 64% to 68%. You can substitute your own preference datasets for domain-specific evaluation.
+Measure how effectively your model generates judge prompts that enable LLMs to predict human preferences. This evaluation works with any preference dataset where humans choose between two AI responses. As a demonstration, we include the [Chatbot Arena dataset](https://www.kaggle.com/competitions/lmsys-chatbot-arena/data). Our fine-tuned model improved accuracy for predicting multi-turn conversations from 59.5% to 62.8%. You can substitute your own preference datasets for domain-specific evaluation.
 
 ```bash
 python judge_maker/evaluate_model.py \
